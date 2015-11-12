@@ -1,0 +1,21 @@
+## Interface: 60200
+## Title: GnomTEC_Gnomcorder2
+## Notes: GnomTEC Gnomcorder Series II.
+## Notes-deDE: GnomTEC Gnomcorder Serie II.
+## Notes-esES: GnomTEC Gnomcorder Series II.
+## Notes-esMX: GnomTEC Gnomcorder Series II.
+## Notes-frFR: GnomTEC Gnomcorder Series II.
+## Notes-itIT: GnomTEC Gnomcorder Series II.
+## Notes-koKR: GnomTEC Gnomcorder Series II.
+## Notes-ptBR: GnomTEC Gnomcorder Series II.
+## Notes-ruRU: GnomTEC Gnomcorder Series II.
+## Notes-zhCN: GnomTEC Gnomcorder Series II.
+## Notes-zhTW: GnomTEC Gnomcorder Series II.
+## Author: Peter Jack
+## Version: 6.2.2.1
+## Dependencies: GnomTEC
+## SavedVariables: GnomTEC_Gnomcorder2DB
+
+locale\locale.xml
+
+GnomTEC_Gnomcorder2.lua

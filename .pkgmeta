@@ -1,0 +1,10 @@
+package-as: GnomTEC_BotOS
+
+required-dependencies:
+    - GnomTEC
+    
+manual-changelog:
+    filename: history.txt
+    markup-type: creole
+
+enable-nolib-creation: no
