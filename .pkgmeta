@@ -1,4 +1,4 @@
-package-as: GnomTEC_BotOS
+package-as: GnomTEC_Gnomcorder2
 
 required-dependencies:
     - GnomTEC
