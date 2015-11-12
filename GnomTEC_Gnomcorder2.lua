@@ -80,7 +80,17 @@ local addonDataObject =	{
 -- ----------------------------------------------------------------------
 -- Helper Functions (local)
 -- ----------------------------------------------------------------------
+local function getChannelId(channel,...)
 
+   for i = 1, select("#", ...), 2 do
+     local id, name = select(i, ...)
+		if (strupper(name) == strupper(channel)) then
+			return id
+		end
+   end
+
+   return nil
+ end
 
 -- ----------------------------------------------------------------------
 -- Addon Class
@@ -111,22 +121,30 @@ local function GnomTECGnomcorder2()
 	-- local function f()
 	local function OnClickMainWindowSend(widget, button)
 		local player = UnitName("player")
-		local character = GnomTECClassCharacter(player);
+		local character = GnomTECClassCharacter(player);	
 		local	posX, posY, posZ, terrainMapID = character.GetPosition()
 		local data = {}
+		local channelName, code = strsplit("-", mainWindowWidgets.mainWindowFrequence.GetText())
+		local channelId = getChannelId(channelName,GetChannelList())
 		
-		data.message = "Dies ist ein Test"
-		data.maxDistance = "1000"
-		if (posX) then
-			data.position = {
-				posX = posX,
-				posY = posY,
-				posZ = posZ,
-				terrainMapID = terrainMapID
-			}
+		self.LogMessage(LOG_DEBUG,"%i %s %s", channelId or -1, channelName or "?", code or "?")
+		if (channelId) then
+			data.frequence = mainWindowWidgets.mainWindowFrequence.GetText()
+			data.message = mainWindowWidgets.mainWindowMessage.GetText()
+			mainWindowWidgets.mainWindowMessage.SetText("")
+			
+			data.maxDistance = "1000"
+			if (posX) then
+				data.position = {
+					posX = posX,
+					posY = posY,
+					posZ = posZ,
+					terrainMapID = terrainMapID
+				}
+			end
+		
+			self.Broadcast(data, "CHANNEL", tostring(channelId));
 		end
-		
-		self.Broadcast(data, "WHISPER", player);
 	end
 
 	-- protected methods
@@ -158,20 +176,24 @@ local function GnomTECGnomcorder2()
 		end		
 		distance = character.GetDistance()
 		
-		mainWindowWidgets.mainWindowReceive.AddMessage(string.format("[%s](%i GDE): %s", sender, distance or -1, data.message or "..."))
+		if (strupper(data.frequence or "") == strupper(mainWindowWidgets.mainWindowFrequence.GetText())) then
+			mainWindowWidgets.mainWindowReceive.AddMessage(string.format("[%s](%i GDE): %s", sender, distance or -1, data.message or "..."))
+		end
 	end
 	
 	function self.SwitchMainWindow(show)
 		if (not mainWindowWidgets) then
 			mainWindowWidgets = {}
 			mainWindowWidgets.mainWindow = GnomTECWidgetContainerWindow({title="GnomTEC Gnomcorder2", name="Main", db=self.db})
-			mainWindowWidgets.mainWindowLayout = mainWindowWidgets.mainWindow
-			
-			mainWindowWidgets.mainWindowLayoutFunctions = GnomTECWidgetContainerLayoutVertical({parent=mainWindowWidgets.mainWindowLayout})
-			mainWindowWidgets.mainWindowTopSpacer = GnomTECWidgetSpacer({parent=mainWindowWidgets.mainWindowLayoutFunctions, minHeight=34, minWidth=50})
-			mainWindowWidgets.mainWindowSend = GnomTECWidgetPanelButton({parent=mainWindowWidgets.mainWindowLayoutFunctions, label="Send Broadcast"})
+			mainWindowWidgets.mainWindowLayout = GnomTECWidgetContainerLayoutVertical({parent=mainWindowWidgets.mainWindow})
+			mainWindowWidgets.mainWindowTopSpacer = GnomTECWidgetSpacer({parent=mainWindowWidgets.mainWindowLayout, minHeight=34, minWidth=50})
+			mainWindowWidgets.mainWindowFrequenceLabel = GnomTECWidgetText({parent=mainWindowWidgets.mainWindowLayout, text="Frequence:", height="0%"})
+			mainWindowWidgets.mainWindowFrequence = GnomTECWidgetEditBox({parent=mainWindowWidgets.mainWindowLayout, text="gvgg-0815", multiLine=false})			
+			mainWindowWidgets.mainWindowMessageLabel = GnomTECWidgetText({parent=mainWindowWidgets.mainWindowLayout, text="Message:", height="0%"})
+			mainWindowWidgets.mainWindowMessage = GnomTECWidgetEditBox({parent=mainWindowWidgets.mainWindowLayout, multiLine=false})			
+			mainWindowWidgets.mainWindowSend = GnomTECWidgetPanelButton({parent=mainWindowWidgets.mainWindowLayout, label="Send Broadcast"})
 			mainWindowWidgets.mainWindowSend.OnClick = OnClickMainWindowSend
-			mainWindowWidgets.mainWindowReceive = GnomTECWidgetScrollingMessage({parent=mainWindowWidgets.mainWindowLayoutFunctions})			
+			mainWindowWidgets.mainWindowReceive = GnomTECWidgetScrollingMessage({parent=mainWindowWidgets.mainWindowLayout, height="100%"})			
 		end
 		
 		if (nil == show) then
