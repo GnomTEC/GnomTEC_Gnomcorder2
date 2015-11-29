@@ -1,6 +1,6 @@
 -- **********************************************************************
 -- GnomTEC Gnomcorder2
--- Version: 6.2.2.1
+-- Version: 6.2.3.1
 -- Author: Peter Jack
 -- URL: http://www.gnomtec.de/
 -- **********************************************************************
@@ -28,8 +28,8 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GnomTEC_Gnomcorder2")
 local addonInfo = {
 	["Name"] = "GnomTEC Gnomcorder2",
 	["Description"] = "GnomTEC Gnomcorder Series II.",	
-	["Version"] = "6.2.2.1",
-	["Date"] = "2015-11-07",
+	["Version"] = "6.2.3.1",
+	["Date"] = "2015-11-20",
 	["Author"] = "Peter Jack",
 	["Email"] = "info@gnomtec.de",
 	["Website"] = "http://www.gnomtec.de/",
@@ -80,17 +80,39 @@ local addonDataObject =	{
 -- ----------------------------------------------------------------------
 -- Helper Functions (local)
 -- ----------------------------------------------------------------------
-local function getChannelId(channel,...)
+-- function which returns also nil for empty strings
+local function emptynil( x ) return x ~= "" and x or nil end
 
-   for i = 1, select("#", ...), 2 do
-     local id, name = select(i, ...)
-		if (strupper(name) == strupper(channel)) then
-			return id
+local function fullunitname(unitName)
+	if (nil ~= emptynil(unitName)) then
+		local player, realm = strsplit( "-", unitName, 2 )
+		if (not realm) then
+			_,realm = UnitFullName("player")
 		end
-   end
+		unitName = player.."-"..realm
+	end
+	return unitName
+end
 
+local function getCustomChannelName(channelNumber)
+	for i=1,GetNumDisplayChannels() do
+   	name, header, collapsed, number, count, active, category, voiceEnabled, voiceActive = GetChannelDisplayInfo(i)
+		if ((channelNumber == number) and (category == "CHANNEL_CATEGORY_CUSTOM")) then
+      	return name
+    	end
+  	end
    return nil
- end
+end
+
+local function getCustomChannelNumber(channelName)
+	for i=1,GetNumDisplayChannels() do
+		name, header, collapsed, number, count, active, category, voiceEnabled, voiceActive = GetChannelDisplayInfo(i)
+    	if ((strupper(name) == strupper(channelName)) and (category == "CHANNEL_CATEGORY_CUSTOM")) then
+      	return number
+    	end
+  	end
+	return nil
+end
 
 -- ----------------------------------------------------------------------
 -- Addon Class
@@ -108,7 +130,7 @@ local function GnomTECGnomcorder2()
 	
 	-- public fields go in the instance table
 	-- self.field = value
-
+	
 	-- protected fields go in the protected table
 	-- protected.field = value
 	
@@ -116,37 +138,154 @@ local function GnomTECGnomcorder2()
 	-- they are faster than table access, and are truly private, so the code that uses your class can't get them
 	-- local field
 	local mainWindowWidgets = nil
+	local isOn = false
 
+	local chat = GnomTECClassChat();
+	
 	-- private methods
 	-- local function f()
-	local function OnClickMainWindowSend(widget, button)
+	local function OnClickmainWindowSwitchOnOff(widget, button)
+		isOn = mainWindowWidgets.mainWindowSwitchOnOff.IsOn()
+		if isOn then
+			mainWindowWidgets.mainWindowLEDOnOff.On()
+			mainWindowWidgets.mainWindowFrequence.On()
+
+			local channelNumber, code
+			local channelName
+
+			channelNumber = 0			
+			code = 0
+		
+			for t=1, 4 do
+				if mainWindowWidgets.mainWindowSwitchFrequence[tostring(t)].IsOn() then
+					mainWindowWidgets.mainWindowLEDFrequence[tostring(t)].On()
+					channelNumber = channelNumber + 2^(4-t)
+				else
+					mainWindowWidgets.mainWindowLEDFrequence[tostring(t)].Off()
+				end
+			end		
+
+			if (channelNumber <= 10) then
+				channelName = getCustomChannelName(channelNumber)
+			else
+				 local groups = {"<<GUILD>>", "<<OFFICER>>" , "<<PARTY>>", "<<RAID>>", "<<INSTANCE_CHAT>>"}
+				 channelName = groups[channelNumber-10]
+			end
+
+			for t=5, 10 do
+				if mainWindowWidgets.mainWindowSwitchFrequence[tostring(t)].IsOn() then
+					mainWindowWidgets.mainWindowLEDFrequence[tostring(t)].On()
+					code = code + 2^(10-t)
+				else
+					mainWindowWidgets.mainWindowLEDFrequence[tostring(t)].Off()
+				end
+			end		
+			mainWindowWidgets.mainWindowFrequence.SetText((channelName or "<<INVALID>>").."-"..code)
+			
+			if mainWindowWidgets.mainWindowSwitchMic.IsOn() then
+				mainWindowWidgets.mainWindowLEDMic.On()
+				isMicOn = true
+			else
+				mainWindowWidgets.mainWindowLEDMic.Off()
+				isMicOn = false
+			end
+			
+		else
+			mainWindowWidgets.mainWindowLEDOnOff.Off()
+			mainWindowWidgets.mainWindowFrequence.Off()
+			for t=1, 10 do
+				mainWindowWidgets.mainWindowLEDFrequence[tostring(t)].Off()
+			end
+			mainWindowWidgets.mainWindowLEDMic.Off()
+		end
+	end
+
+	local function OnClickmainWindowSwitchFrequence(widget, button)
+		if (isOn) then
+			label = widget.GetLabel()
+			if (label) then
+				if mainWindowWidgets.mainWindowSwitchFrequence[label].IsOn() then
+					mainWindowWidgets.mainWindowLEDFrequence[label].On()
+				else
+					mainWindowWidgets.mainWindowLEDFrequence[label].Off()
+				end
+			end
+			
+			local channelNumber, code
+			local channelName
+
+			channelNumber = 0			
+			code = 0
+		
+			for t=1, 4 do
+				if mainWindowWidgets.mainWindowSwitchFrequence[tostring(t)].IsOn() then
+					channelNumber = channelNumber + 2^(4-t)
+				end
+			end		
+			if (channelNumber <= 10) then
+				channelName = getCustomChannelName(channelNumber)
+			else
+				 local groups = {"<<GUILD>>", "<<OFFICER>>" , "<<PARTY>>", "<<RAID>>", "<<INSTANCE_CHAT>>"}
+				 channelName = groups[channelNumber-10]
+			end
+
+			for t=5, 10 do
+				if mainWindowWidgets.mainWindowSwitchFrequence[tostring(t)].IsOn() then
+					code = code + 2^(10-t)
+				end
+			end		
+
+			mainWindowWidgets.mainWindowFrequence.SetText((channelName or "<<INVALID>>").."-"..code)
+		end
+	end
+
+	local function OnClickmainWindowSwitchMic(widget, button)
+		if (isOn) then
+			if mainWindowWidgets.mainWindowSwitchMic.IsOn() then
+				mainWindowWidgets.mainWindowLEDMic.On()
+				isMicOn = true
+			else
+				mainWindowWidgets.mainWindowLEDMic.Off()
+				isMicOn = false
+			end
+		end
+	end
+	
+	local function Broadcast(message)
+		if (not isOn) or (not isMicOn) then
+			return
+		end
+		
 		local player = UnitName("player")
 		local character = GnomTECClassCharacter(player);	
 		local	posX, posY, posZ, terrainMapID = character.GetPosition()
 		local data = {}
 		local channelName, code = strsplit("-", mainWindowWidgets.mainWindowFrequence.GetText())
-		local channelId = getChannelId(channelName,GetChannelList())
-		
-		self.LogMessage(LOG_DEBUG,"%i %s %s", channelId or -1, channelName or "?", code or "?")
-		if (channelId) then
-			data.frequence = mainWindowWidgets.mainWindowFrequence.GetText()
-			data.message = mainWindowWidgets.mainWindowMessage.GetText()
-			mainWindowWidgets.mainWindowMessage.SetText("")
+		local ChannelNumber = getCustomChannelNumber(channelName)	
+		data.frequence = mainWindowWidgets.mainWindowFrequence.GetText()
+		data.message = message
 			
-			data.maxDistance = "1000"
-			if (posX) then
-				data.position = {
-					posX = posX,
-					posY = posY,
-					posZ = posZ,
-					terrainMapID = terrainMapID
-				}
-			end
-		
-			self.Broadcast(data, "CHANNEL", tostring(channelId));
+		data.maxDistance = "1000"
+		if (posX) then
+			data.position = {
+				posX = posX,
+				posY = posY,
+				posZ = posZ,
+				terrainMapID = terrainMapID
+			}
+		end
+
+		if (ChannelNumber) then
+			self.Broadcast(data, "CHANNEL", tostring(ChannelNumber));
+		else
+			local channel = string.match(channelName,"<<[%a_]+>>")
+			if (channel and (channel ~= "<<INVALID>>")) then
+				local distribution = string.match(channel,"[%a_]+")
+				self.Broadcast(data, distribution, nil)
+			end 
 		end
 	end
-
+	
 	-- protected methods
 	-- function protected.f()
 	function protected.OnInitialize()
@@ -168,6 +307,10 @@ local function GnomTECGnomcorder2()
 	-- public methods
 	-- function self.f()
 	function self.OnBroadcast(data, sender)
+		if (not isOn) then
+			return
+		end
+
 		local character = GnomTECClassCharacter(sender);
 		local distance
 		
@@ -177,23 +320,70 @@ local function GnomTECGnomcorder2()
 		distance = character.GetDistance()
 		
 		if (strupper(data.frequence or "") == strupper(mainWindowWidgets.mainWindowFrequence.GetText())) then
-			mainWindowWidgets.mainWindowReceive.AddMessage(string.format("[%s](%i GDE): %s", sender, distance or -1, data.message or "..."))
+			chat.LocalMonsterWhisper(string.format("[Gnomcorder] [%s]:(%i GDE): %s", sender, distance or -1, data.message or "..."), sender)
 		end
 	end
 	
+	function chat.OnSay(message, sender)
+		sender = fullunitname(sender)
+		if (sender == fullunitname(UnitName("player"))) then
+			Broadcast(message)
+		end
+	end
+
+	function chat.OnWhisper(message, sender)
+		sender = fullunitname(sender)
+		if (sender == fullunitname(UnitName("player"))) then
+			Broadcast(message)
+		end
+	end
+
 	function self.SwitchMainWindow(show)
 		if (not mainWindowWidgets) then
 			mainWindowWidgets = {}
-			mainWindowWidgets.mainWindow = GnomTECWidgetContainerWindow({title="GnomTEC Gnomcorder2", name="Main", db=self.db})
+			mainWindowWidgets.mainWindow = GnomTECWidgetContainerDevice({title="GnomTEC Gnomcorder2", name="Main", db=self.db})
 			mainWindowWidgets.mainWindowLayout = GnomTECWidgetContainerLayoutVertical({parent=mainWindowWidgets.mainWindow})
-			mainWindowWidgets.mainWindowTopSpacer = GnomTECWidgetSpacer({parent=mainWindowWidgets.mainWindowLayout, minHeight=34, minWidth=50})
-			mainWindowWidgets.mainWindowFrequenceLabel = GnomTECWidgetText({parent=mainWindowWidgets.mainWindowLayout, text="Frequence:", height="0%"})
-			mainWindowWidgets.mainWindowFrequence = GnomTECWidgetEditBox({parent=mainWindowWidgets.mainWindowLayout, text="gvgg-0815", multiLine=false})			
-			mainWindowWidgets.mainWindowMessageLabel = GnomTECWidgetText({parent=mainWindowWidgets.mainWindowLayout, text="Message:", height="0%"})
-			mainWindowWidgets.mainWindowMessage = GnomTECWidgetEditBox({parent=mainWindowWidgets.mainWindowLayout, multiLine=false})			
-			mainWindowWidgets.mainWindowSend = GnomTECWidgetPanelButton({parent=mainWindowWidgets.mainWindowLayout, label="Send Broadcast"})
-			mainWindowWidgets.mainWindowSend.OnClick = OnClickMainWindowSend
-			mainWindowWidgets.mainWindowReceive = GnomTECWidgetScrollingMessage({parent=mainWindowWidgets.mainWindowLayout, height="100%"})			
+
+			mainWindowWidgets.mainWindowLayoutTop = GnomTECWidgetContainerLayoutHorizontal({parent=mainWindowWidgets.mainWindowLayout})
+
+			mainWindowWidgets.mainWindowLayoutOnOff = GnomTECWidgetContainerLayoutVertical({parent=mainWindowWidgets.mainWindowLayoutTop, width="1%"})
+			mainWindowWidgets.mainWindowPlaqueOnOff = GnomTECWidgetDevicePlaque({parent=mainWindowWidgets.mainWindowLayoutOnOff, text="On"})
+			mainWindowWidgets.mainWindowLayoutSwitchFieldOnOff = GnomTECWidgetContainerLayoutHorizontal({parent=mainWindowWidgets.mainWindowLayoutOnOff})
+			mainWindowWidgets.mainWindowSwitchesSpacer1 = GnomTECWidgetSpacer({parent=mainWindowWidgets.mainWindowLayoutSwitchFieldOnOff, width="50%"})	
+			mainWindowWidgets.mainWindowLayoutSwitchOnOff = GnomTECWidgetContainerLayoutVertical({parent=mainWindowWidgets.mainWindowLayoutSwitchFieldOnOff})
+			mainWindowWidgets.mainWindowSwitchOnOff= GnomTECWidgetDeviceSwitch({parent=mainWindowWidgets.mainWindowLayoutSwitchOnOff, on=false})
+			mainWindowWidgets.mainWindowSwitchOnOff.OnClick = OnClickmainWindowSwitchOnOff
+			mainWindowWidgets.mainWindowLEDOnOff= GnomTECWidgetDeviceLED({parent=mainWindowWidgets.mainWindowLayoutSwitchOnOff, on=false})
+			mainWindowWidgets.mainWindowSwitchesSpacer2 = GnomTECWidgetSpacer({parent=mainWindowWidgets.mainWindowLayoutSwitchFieldOnOff, width="50%"})	
+
+			mainWindowWidgets.mainWindowLayoutFrequence = GnomTECWidgetContainerLayoutVertical({parent=mainWindowWidgets.mainWindowLayoutTop})
+			mainWindowWidgets.mainWindowMessagePlaqueFrequence = GnomTECWidgetDevicePlaque({parent=mainWindowWidgets.mainWindowLayoutFrequence, text="Frequence settings"})
+			mainWindowWidgets.mainWindowLayoutSwitches = GnomTECWidgetContainerLayoutHorizontal({parent=mainWindowWidgets.mainWindowLayoutFrequence})
+			mainWindowWidgets.mainWindowSwitchesSpacer3 = GnomTECWidgetSpacer({parent=mainWindowWidgets.mainWindowLayoutSwitches, width="50%"})	
+			mainWindowWidgets.mainWindowLayoutSwitchFrequence = {}
+			mainWindowWidgets.mainWindowSwitchFrequence = {}
+			mainWindowWidgets.mainWindowLEDFrequence = {}			
+			for t=1, 10 do
+				mainWindowWidgets.mainWindowLayoutSwitchFrequence[tostring(t)] = GnomTECWidgetContainerLayoutVertical({parent=mainWindowWidgets.mainWindowLayoutSwitches})
+				mainWindowWidgets.mainWindowSwitchFrequence[tostring(t)] = GnomTECWidgetDeviceSwitch({parent=mainWindowWidgets.mainWindowLayoutSwitchFrequence[tostring(t)], label=tostring(t), on=false})
+				mainWindowWidgets.mainWindowSwitchFrequence[tostring(t)].OnClick = OnClickmainWindowSwitchFrequence
+				mainWindowWidgets.mainWindowLEDFrequence[tostring(t)]= GnomTECWidgetDeviceLED({parent=mainWindowWidgets.mainWindowLayoutSwitchFrequence[tostring(t)], on=false})
+			end		
+			mainWindowWidgets.mainWindowSwitchesSpacer4 = GnomTECWidgetSpacer({parent=mainWindowWidgets.mainWindowLayoutSwitches, width="50%"})	
+
+			mainWindowWidgets.mainWindowFrequence = GnomTECWidgetDeviceNixie({parent=mainWindowWidgets.mainWindowLayout, text="-----", length="25", on=false})			
+
+			mainWindowWidgets.mainWindowLayoutBottom = GnomTECWidgetContainerLayoutHorizontal({parent=mainWindowWidgets.mainWindowLayout})
+			mainWindowWidgets.mainWindowLayoutMic = GnomTECWidgetContainerLayoutVertical({parent=mainWindowWidgets.mainWindowLayoutBottom, width="1%"})
+			mainWindowWidgets.mainWindowPlaqueMic = GnomTECWidgetDevicePlaque({parent=mainWindowWidgets.mainWindowLayoutMic, text="Microfone"})
+			mainWindowWidgets.mainWindowLayoutSwitchFieldMic = GnomTECWidgetContainerLayoutHorizontal({parent=mainWindowWidgets.mainWindowLayoutMic})
+			mainWindowWidgets.mainWindowSwitchesSpacer5 = GnomTECWidgetSpacer({parent=mainWindowWidgets.mainWindowLayoutSwitchFieldMic, width="50%"})	
+			mainWindowWidgets.mainWindowLayoutSwitchMic = GnomTECWidgetContainerLayoutVertical({parent=mainWindowWidgets.mainWindowLayoutSwitchFieldMic})
+			mainWindowWidgets.mainWindowSwitchMic = GnomTECWidgetDeviceSwitch({parent=mainWindowWidgets.mainWindowLayoutSwitchMic, on=false})
+			mainWindowWidgets.mainWindowSwitchMic.OnClick = OnClickmainWindowSwitchMic
+			mainWindowWidgets.mainWindowLEDMic = GnomTECWidgetDeviceLED({parent=mainWindowWidgets.mainWindowLayoutSwitchMic, on=false})
+			mainWindowWidgets.mainWindowSwitchesSpacer6 = GnomTECWidgetSpacer({parent=mainWindowWidgets.mainWindowLayoutSwitchFieldMic, width="50%"})	
+
 		end
 		
 		if (nil == show) then
