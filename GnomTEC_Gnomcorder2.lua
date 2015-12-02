@@ -29,7 +29,7 @@ local addonInfo = {
 	["Name"] = "GnomTEC Gnomcorder2",
 	["Description"] = "GnomTEC Gnomcorder Series II.",	
 	["Version"] = "6.2.3.1",
-	["Date"] = "2015-11-20",
+	["Date"] = "2015-12-02",
 	["Author"] = "Peter Jack",
 	["Email"] = "info@gnomtec.de",
 	["Website"] = "http://www.gnomtec.de/",
@@ -180,7 +180,7 @@ local function GnomTECGnomcorder2()
 					mainWindowWidgets.mainWindowLEDFrequence[tostring(t)].Off()
 				end
 			end		
-			mainWindowWidgets.mainWindowFrequence.SetText((channelName or "<<INVALID>>").."-"..code)
+			mainWindowWidgets.mainWindowFrequence.SetText((channelName or "<<INVALID>>").."-"..code, 0, 5)
 			
 			if mainWindowWidgets.mainWindowSwitchMic.IsOn() then
 				mainWindowWidgets.mainWindowLEDMic.On()
@@ -235,7 +235,7 @@ local function GnomTECGnomcorder2()
 				end
 			end		
 
-			mainWindowWidgets.mainWindowFrequence.SetText((channelName or "<<INVALID>>").."-"..code)
+			mainWindowWidgets.mainWindowFrequence.SetText((channelName or "<<INVALID>>").."-"..code, 0, 5)
 		end
 	end
 
@@ -261,11 +261,15 @@ local function GnomTECGnomcorder2()
 		local	posX, posY, posZ, terrainMapID = character.GetPosition()
 		local data = {}
 		local channelName, code = strsplit("-", mainWindowWidgets.mainWindowFrequence.GetText())
-		local ChannelNumber = getCustomChannelNumber(channelName)	
+		local channelNumber = getCustomChannelNumber(channelName)	
+
+		code = tonumber(code)
 		data.frequence = mainWindowWidgets.mainWindowFrequence.GetText()
-		data.message = message
-			
-		data.maxDistance = "1000"
+		if (code ~= 0) then
+			-- we send the message itself only when code ~= 0 within hidden addonmessage
+			data.message = message;
+		end
+		
 		if (posX) then
 			data.position = {
 				posX = posX,
@@ -275,14 +279,87 @@ local function GnomTECGnomcorder2()
 			}
 		end
 
-		if (ChannelNumber) then
-			self.Broadcast(data, "CHANNEL", tostring(ChannelNumber));
+		if (channelNumber) then
+			self.Broadcast(data, "CHANNEL", tostring(channelNumber));
+			if (code == 0) then
+				-- we send the message itself as normal chat message if code == 0
+				-- this is also a legacy GnomCorder compatibility mode
+				message = "!0 "..message
+				chat.SendMessage(message, "CHANNEL", tostring(channelNumber))
+			end
 		else
 			local channel = string.match(channelName,"<<[%a_]+>>")
 			if (channel and (channel ~= "<<INVALID>>")) then
 				local distribution = string.match(channel,"[%a_]+")
 				self.Broadcast(data, distribution, nil)
+				if (code == 0) then
+					-- we send the message itself as normal chat message if code == 0
+					-- this is also a legacy GnomCorder compatibility mode
+					message = "!0 "..message
+					chat.SendMessage(message, distribution)
+				end
 			end 
+		end
+	end
+	
+	function chat.OnInstance(message, sender)
+		if (strfind(message,"^!%d ")) then
+			-- Gnomcorder normal chat message (or legacy message)
+			local data = {}
+			data.frequence = "<<INSTANCE_CHAT>>-0"
+			data.message = string.gsub(message,"^!%d ","")	
+			self.OnBroadcast(data, sender)
+		end
+	end
+
+	function chat.OnChannel(message, sender, channelNumber)
+		local channelName = getCustomChannelName(channelNumber)
+		if ((channelName) and (strfind(message,"^!%d "))) then
+			-- Gnomcorder normal chat message (or legacy message)
+			local data = {}
+			data.frequence = channelName.."-0"
+			data.message = string.gsub(message,"^!%d ","")	
+			self.OnBroadcast(data, sender)
+		end
+	end
+
+	function chat.OnGuild(message, sender)
+		if (strfind(message,"^!%d ")) then
+			-- Gnomcorder normal chat message (or legacy message)
+			local data = {}
+			data.frequence = "<<GUILD>>-0"
+			data.message = string.gsub(message,"^!%d ","")	
+			self.OnBroadcast(data, sender)
+		end
+	end
+
+	function chat.OnOfficer(message, sender)
+		if (strfind(message,"^!%d ")) then
+			-- Gnomcorder normal chat message (or legacy message)
+			local data = {}
+			data.frequence = "<<OFFICER>>-0"
+			data.message = string.gsub(message,"^!%d ","")	
+			self.OnBroadcast(data, sender)
+		end
+	end
+
+	function chat.OnParty(message, sender)
+		if (strfind(message,"^!%d ")) then
+			-- Gnomcorder normal chat message (or legacy message)
+			local data = {}
+			data.frequence = "<<PARTY>>-0"
+			data.message = string.gsub(message,"^!%d ","")	
+			self.OnBroadcast(data, sender)
+		end
+	end
+
+	function chat.OnRaid(message, sender)
+		if (strfind(message,"^!%d ")) then
+			-- Gnomcorder normal chat message (or legacy message)
+			local data = {}
+			data.frequence = "<<RAID>>-0"
+			data.message = string.gsub(message,"^!%d ","")	
+			self.OnBroadcast(data, sender)
 		end
 	end
 	
@@ -319,8 +396,10 @@ local function GnomTECGnomcorder2()
 		end		
 		distance = character.GetDistance()
 		
-		if (strupper(data.frequence or "") == strupper(mainWindowWidgets.mainWindowFrequence.GetText())) then
-			chat.LocalMonsterWhisper(string.format("[Gnomcorder] [%s]:(%i GDE): %s", sender, distance or -1, data.message or "..."), sender)
+		if (data.message) then
+			if (strupper(data.frequence or "") == strupper(mainWindowWidgets.mainWindowFrequence.GetText())) then
+				chat.LocalMonsterWhisper(string.format("[Gnomcorder] [%s]:(%i GDE): %s", sender, distance or -1, data.message or "..."), sender)
+			end
 		end
 	end
 	
