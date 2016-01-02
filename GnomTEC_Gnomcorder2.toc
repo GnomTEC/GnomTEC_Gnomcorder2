@@ -18,4 +18,5 @@
 
 locale\locale.xml
 
+GnomTEC_Gnomcorder2_Radio.lua
 GnomTEC_Gnomcorder2.lua
