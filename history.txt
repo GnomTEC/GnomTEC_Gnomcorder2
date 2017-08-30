@@ -1,4 +1,4 @@
 == GnomTEC Gnomcorder2 - Change History 
 
-=== 7.2.0.1 (2017-04-01)
+=== 7.3.0.1 (2017-08-30)
 * Initial version

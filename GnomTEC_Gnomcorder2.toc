@@ -1,4 +1,4 @@
-## Interface: 70200
+## Interface: 70300
 ## Title: GnomTEC_Gnomcorder2
 ## Notes: GnomTEC Gnomcorder Series II.
 ## Notes-deDE: GnomTEC Gnomcorder Serie II.
@@ -12,7 +12,7 @@
 ## Notes-zhCN: GnomTEC Gnomcorder Series II.
 ## Notes-zhTW: GnomTEC Gnomcorder Series II.
 ## Author: Peter Jack
-## Version: 7.2.0.1
+## Version: 7.3.0.1
 ## Dependencies: GnomTEC
 ## SavedVariables: GnomTEC_Gnomcorder2DB
 
