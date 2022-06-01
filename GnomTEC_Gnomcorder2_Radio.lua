@@ -1,10 +1,10 @@
 -- **********************************************************************
 -- GnomTEC Gnomcorder2 - Radio
--- Version: 7.3.0.1
+-- Version: 9.2.0.1
 -- Author: Peter Jack
 -- URL: http://www.gnomtec.de/
 -- **********************************************************************
--- Copyright © 2015-2017 by Peter Jack
+-- Copyright © 2015-2022 by Peter Jack
 --
 -- Licensed under the EUPL, Version 1.1 only (the "Licence");
 -- You may not use this work except in compliance with the Licence.
@@ -25,19 +25,19 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GnomTEC_Gnomcorder2")
 -- Module Global Constants (local)
 -- ----------------------------------------------------------------------
 -- Class levels
-local CLASS_BASE			= 0
-local CLASS_CLASS			= 1
+local CLASS_BASE		= 0
+local CLASS_CLASS		= 1
 local CLASS_WIDGET		= 2
-local CLASS_ADDON			= 3
+local CLASS_ADDON		= 3
 local CLASS_ADDONMODULE	= 4
 
 
 -- Log levels
-local LOG_FATAL 	= 0
+local LOG_FATAL = 0
 local LOG_ERROR	= 1
-local LOG_WARN		= 2
+local LOG_WARN	= 2
 local LOG_INFO 	= 3
-local LOG_DEBUG 	= 4
+local LOG_DEBUG = 4
 
 -- ----------------------------------------------------------------------
 -- Module Static Variables (local)
@@ -384,6 +384,20 @@ function GnomTECGnomcorder2Radio(addon, moduleIdentifier)
 			self.OnBroadcastEventHandler(nil, "GNOMTEC_COMM_BROADCAST", data, sender)
 		end
 	end
+
+	function chat.OnSay(message, sender)
+		sender = fullunitname(sender)
+		if (sender == fullunitname(UnitName("player"))) then
+			Broadcast(message)
+		end
+	end
+
+	function chat.OnWhisper(message, sender)
+		sender = fullunitname(sender)
+		if (sender == fullunitname(UnitName("player"))) then
+			Broadcast(message)
+		end
+	end
 	
 	-- protected methods
 	-- function protected.f()
@@ -420,20 +434,6 @@ function GnomTECGnomcorder2Radio(addon, moduleIdentifier)
 		end
 	end
 	
-	function chat.OnSay(message, sender)
-		sender = fullunitname(sender)
-		if (sender == fullunitname(UnitName("player"))) then
-			Broadcast(message)
-		end
-	end
-
-	function chat.OnWhisper(message, sender)
-		sender = fullunitname(sender)
-		if (sender == fullunitname(UnitName("player"))) then
-			Broadcast(message)
-		end
-	end
-
 	function self.SwitchMainWindow(show)
 		if (not widgets) then
 			widgets = {}

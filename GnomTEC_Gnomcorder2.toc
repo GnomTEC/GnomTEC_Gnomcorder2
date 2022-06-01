@@ -1,4 +1,4 @@
-## Interface: 80200
+## Interface: 90205
 ## Title: GnomTEC_Gnomcorder2
 ## Notes: GnomTEC Gnomcorder Series II.
 ## Notes-deDE: GnomTEC Gnomcorder Serie II.
@@ -12,7 +12,7 @@
 ## Notes-zhCN: GnomTEC Gnomcorder Series II.
 ## Notes-zhTW: GnomTEC Gnomcorder Series II.
 ## Author: Peter Jack
-## Version: 8.2.0.1
+## Version: 9.2.5.1
 ## Dependencies: GnomTEC
 ## SavedVariables: GnomTEC_Gnomcorder2DB
 
