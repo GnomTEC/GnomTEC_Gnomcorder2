@@ -1,6 +1,6 @@
 -- **********************************************************************
 -- GnomTEC Gnomcorder2
--- Version: 9.2.5.1
+-- Version: 9.2.7.1
 -- Author: Peter Jack
 -- URL: http://www.gnomtec.de/
 -- **********************************************************************
@@ -28,8 +28,8 @@ local L = LibStub("AceLocale-3.0"):GetLocale("GnomTEC_Gnomcorder2")
 local addonInfo = {
 	["Name"] = "GnomTEC Gnomcorder2",
 	["Description"] = "GnomTEC Gnomcorder Series II.",	
-	["Version"] = "9.2.5.1",
-	["Date"] = "2022-06-01",
+	["Version"] = "9.2.7.1",
+	["Date"] = "2022-09-15",
 	["Author"] = "Peter Jack",
 	["Email"] = "info@gnomtec.de",
 	["Website"] = "http://www.gnomtec.de/",
