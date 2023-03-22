@@ -1,4 +1,4 @@
-## Interface: 100005
+## Interface: 100007
 ## Title: GnomTEC_Gnomcorder2
 ## Notes: GnomTEC Gnomcorder Series II.
 ## Notes-deDE: GnomTEC Gnomcorder Serie II.
@@ -12,7 +12,7 @@
 ## Notes-zhCN: GnomTEC Gnomcorder Series II.
 ## Notes-zhTW: GnomTEC Gnomcorder Series II.
 ## Author: Peter Jack
-## Version: 10.0.5.1
+## Version: 10.0.7.1
 ## Dependencies: GnomTEC
 ## SavedVariables: GnomTEC_Gnomcorder2DB
 
