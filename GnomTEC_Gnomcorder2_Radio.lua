@@ -1,10 +1,10 @@
 -- **********************************************************************
 -- GnomTEC Gnomcorder2 - Radio
--- Version: 10.0.0.1
+-- Version: 10.1.0.1
 -- Author: Peter Jack
 -- URL: http://www.gnomtec.de/
 -- **********************************************************************
--- Copyright © 2015-2022 by Peter Jack
+-- Copyright © 2015-2023 by Peter Jack
 --
 -- Licensed under the EUPL, Version 1.1 only (the "Licence");
 -- You may not use this work except in compliance with the Licence.
